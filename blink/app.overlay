@@ -1,0 +1,6 @@
+/ {
+	aliases {
+		/* Reuse the board's first LED, whatever it is called. */
+		app-led = &led0;
+	};
+};
