@@ -1,0 +1,54 @@
+# Copyright (c) 2026
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_OUR_BOARD
+
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	int
+	default 125000000
+
+config SERIAL
+	bool
+	default y
+
+config CONSOLE
+	bool
+	default y
+
+config UART_CONSOLE
+	bool
+	default y
+
+config GPIO
+	bool
+	default y
+
+config USE_DT_CODE_PARTITION
+	bool
+	default y
+
+config BUILD_OUTPUT_UF2
+	bool
+	default y
+
+config BUILD_OUTPUT_HEX
+	bool
+	default y
+
+config UART_INTERRUPT_DRIVEN
+	bool
+	default y
+
+config RESET
+	bool
+	default y
+
+config CLOCK_CONTROL
+	bool
+	default y
+
+config USB_SELF_POWERED
+	bool
+	default n
+
+endif # BOARD_OUR_BOARD
