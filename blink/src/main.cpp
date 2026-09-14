@@ -19,6 +19,8 @@ int main(void)
 
     if (gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE) < 0) return 0;
 
+    LOG_INF("Board Initialized");
+
     while (1) {
         if (gpio_pin_toggle_dt(&led) < 0) return 0;
 
