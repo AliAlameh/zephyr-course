@@ -1,5 +1,6 @@
 #define DT_DRV_COMPAT led_sensor
 
+#include <led_sensor/led_sensor.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
@@ -14,6 +15,7 @@ struct led_sensor_config {
 
 struct led_sensor_data {
 	bool led_on;
+	uint32_t toggle_count;
 };
 
 static int led_sensor_sample_fetch(const struct device *dev, enum sensor_channel chan)
@@ -33,6 +35,7 @@ static int led_sensor_sample_fetch(const struct device *dev, enum sensor_channel
 	}
 
 	data->led_on = true;
+	data->toggle_count++;
 	LOG_DBG("LED turned ON");
 
 	return 0;
@@ -60,6 +63,7 @@ static int led_sensor_channel_get(const struct device *dev, enum sensor_channel 
 	}
 
 	data->led_on = false;
+	data->toggle_count++;
 	LOG_DBG("LED turned OFF");
 
 	return 0;
@@ -69,6 +73,20 @@ static DEVICE_API(sensor, led_sensor_api) = {
 	.sample_fetch = led_sensor_sample_fetch,
 	.channel_get = led_sensor_channel_get,
 };
+
+int led_sensor_set_toggle_count(const struct device *dev, uint32_t count)
+{
+	if (dev->api != &led_sensor_api) {
+		return -ENOTSUP;
+	}
+
+	struct led_sensor_data *data = dev->data;
+
+	data->toggle_count = count;
+	LOG_DBG("toggle_count set to %u", count);
+
+	return 0;
+}
 
 static int led_sensor_init(const struct device *dev)
 {
