@@ -1,0 +1,9 @@
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+	led_sensor0: led_sensor_0 {
+		compatible = "led,sensor";
+		gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+};

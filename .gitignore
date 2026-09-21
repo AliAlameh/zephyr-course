@@ -4,3 +4,5 @@ build
 # West files
 .west
 deps
+blink/build_our_board/
+

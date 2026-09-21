@@ -1,0 +1,14 @@
+description: |
+  On-board LED exposed through the Zephyr sensor API.
+  sensor_sample_fetch() turns the LED on, sensor_channel_get() turns it back
+  off and reports the state that was last fetched.
+
+compatible: "led,sensor"
+
+include: base.yaml
+
+properties:
+  gpios:
+    type: phandle-array
+    required: true
+    description: GPIO connected to the LED driven by this "sensor".

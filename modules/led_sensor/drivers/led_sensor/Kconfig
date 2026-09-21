@@ -1,0 +1,8 @@
+menuconfig LED_SENSOR
+	bool "LED Sensor Driver"
+	default y
+	depends on DT_HAS_LED_SENSOR_ENABLED
+	depends on SENSOR
+	select GPIO
+	help
+	  Enable the on-board LED driver exposed through the sensor API.
