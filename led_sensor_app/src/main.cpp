@@ -1,41 +1,86 @@
-#include <led_sensor/led_sensor.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
-#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-
-#define SLEEP_TIME_MS 1000
-#define TOGGLE_COUNT_RESET_EVERY 4
+#include <zephyr/shell/shell.h>
+#include <zephyr/usb/usb_device.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
+static const struct device *const sensor_dev = DEVICE_DT_GET_ANY(led_sensor);
+
+static int sensor_fetch(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	if (sensor_dev == NULL || !device_is_ready(sensor_dev)) {
+		shell_error(sh, "LED sensor device not ready");
+		return -ENODEV;
+	}
+
+	int ret = sensor_sample_fetch(sensor_dev);
+
+	if (ret < 0) {
+		shell_error(sh, "Sample fetch failed (%d)", ret);
+		return ret;
+	}
+
+	shell_print(sh, "Sample fetched: LED ON");
+	return 0;
+}
+
+static int sensor_read(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	if (sensor_dev == NULL || !device_is_ready(sensor_dev)) {
+		shell_error(sh, "LED sensor device not ready");
+		return -ENODEV;
+	}
+
+	struct sensor_value val;
+	int ret = sensor_channel_get(sensor_dev, SENSOR_CHAN_ALL, &val);
+
+	if (ret < 0) {
+		shell_error(sh, "Channel get failed (%d)", ret);
+		return ret;
+	}
+
+	shell_print(sh, "LED was %s (value: %d), now OFF", val.val1 ? "ON" : "OFF", val.val1);
+	return 0;
+}
+
+static int sensor_info(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	shell_print(sh, "Device: %s, ready: %s", sensor_dev ? sensor_dev->name : "not found",
+		    sensor_dev && device_is_ready(sensor_dev) ? "yes" : "no");
+	return 0;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sensor_commands,
+	SHELL_CMD(fetch, NULL, "Fetch an LED sensor sample", sensor_fetch),
+	SHELL_CMD(read, NULL, "Read the last LED sensor sample", sensor_read),
+	SHELL_CMD(info, NULL, "Show LED sensor device information", sensor_info),
+	SHELL_SUBCMD_SET_END);
+SHELL_CMD_REGISTER(sensor, &sensor_commands, "LED sensor commands", NULL);
+
 int main(void)
 {
-	const struct device *dev = DEVICE_DT_GET_ANY(led_sensor);
-	int iterations = 0;
+	if (usb_enable(NULL)) {
+		LOG_ERR("USB CDC initialization failed");
+		return 0;
+	}
 
-	if (dev == NULL || !device_is_ready(dev)) {
+	if (sensor_dev == NULL || !device_is_ready(sensor_dev)) {
 		LOG_ERR("LED sensor device not ready");
 		return 0;
 	}
 
-	while (1) {
-		struct sensor_value val;
-
-		sensor_sample_fetch(dev);
-		LOG_INF("Fetched sample: LED ON");
-		k_msleep(SLEEP_TIME_MS);
-
-		sensor_channel_get(dev, SENSOR_CHAN_ALL, &val);
-		LOG_INF("Channel get: LED was %s, now OFF", val.val1 ? "ON" : "OFF");
-		k_msleep(SLEEP_TIME_MS);
-
-		if (++iterations >= TOGGLE_COUNT_RESET_EVERY) {
-			LOG_INF("Resetting driver's toggle_count via extension API");
-			led_sensor_set_toggle_count(dev, 0);
-			iterations = 0;
-		}
-	}
+	LOG_INF("LED sensor ready; use sensor fetch, read, or info");
 
 	return 0;
 }
